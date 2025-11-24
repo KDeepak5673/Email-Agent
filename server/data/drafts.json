@@ -1,0 +1,78 @@
+[
+  {
+    "id": "draft_1",
+    "subject": "Weekly Report Submission",
+    "body": "Hi Boss,\n\nAttached is the weekly report including Q4 projections. Please let me know if you need any additional information.\n\nBest regards,\n[Your Name]",
+    "created": "2025-11-20T10:00:00.000Z"
+  },
+  {
+    "id": "draft_2",
+    "subject": "Re: Family dinner this weekend",
+    "body": "Hi Mom,\n\nI'd love to come to family dinner on Saturday. I'll bring the dessert. See you at 6 PM!\n\nLove,\n[Your Name]",
+    "created": "2025-11-19T20:00:00.000Z"
+  },
+  {
+    "id": "draft_3",
+    "subject": "Meeting Confirmation - Performance Review",
+    "body": "Dear HR Team,\n\nThank you for scheduling my performance review. I'll be there tomorrow at 2 PM in Conference Room A, fully prepared to discuss my achievements and future goals.\n\nBest,\n[Your Name]",
+    "created": "2025-11-18T11:00:00.000Z"
+  },
+  {
+    "id": "draft_4",
+    "subject": "Project Extension Discussion",
+    "body": "Hi [Client Name],\n\nI understand your request for a 2-week extension. Let's schedule a call to discuss the timeline and any adjustments needed. What time works best for you tomorrow?\n\nRegards,\n[Your Name]",
+    "created": "2025-11-17T12:00:00.000Z"
+  },
+  {
+    "id": "draft_5",
+    "subject": "Thank You for the Update",
+    "body": "Dear Amazon Team,\n\nThank you for the shipping notification. I'm looking forward to receiving my order by November 22nd.\n\nBest,\n[Your Name]",
+    "created": "2025-11-16T17:00:00.000Z"
+  },
+  {
+    "id": 1763637339722,
+    "subject": "Re: Performance Review Meeting - Tomorrow 2 PM",
+    "body": "Thank you for the notification. Could you please provide an agenda for our discussion?",
+    "timestamp": "2025-11-20T11:15:39.722Z",
+    "originalEmailId": "5"
+  },
+  {
+    "id": 1763637581750,
+    "subject": "Re: Project deadline extension request",
+    "body": "```json\n{\n  \"subject\": \"Re: Project Deadline Extension Request\",\n  \"body\": \"Hi,\\n\\nThanks for letting us know about the need for a 2-week extension on the project deadline.\\n\\nYes, we can definitely discuss this in our next scheduled meeting. To help us prepare, could you perhaps provide a brief overview of the unforeseen circumstances before the meeting?\\n\\nLooking forward to discussing this further then.\\n\\nBest regards,\",\n  \"follow_up_suggestions\": [\n    \"Review the project timeline and impact of a 2-week delay.\",\n    \"Gather questions or concerns to discuss during the meeting.\"\n  ]\n}\n```",
+    "timestamp": "2025-11-20T11:19:41.750Z",
+    "originalEmailId": "6"
+  },
+  {
+    "id": 1763637649205,
+    "subject": "Re: Weekly Tech Roundup: AI Breakthroughs",
+    "body": "```json\n{\n  \"subject\": \"Re: This week in tech: Major AI companies announce new models, startup funding hits record highs, and quantum computing makes progress.\",\n  \"body\": \"Thank you for sharing this week's tech roundup. I appreciate the summary and will take a look at the full article on TechCrunch.\",\n  \"follow_up_suggestions\": []\n}\n```",
+    "timestamp": "2025-11-20T11:20:49.205Z",
+    "originalEmailId": "2"
+  },
+  {
+    "id": 1763645224355,
+    "subject": "Re: WIN A FREE IPHONE NOW!!!",
+    "body": "{\n  \"subject\": \"Automatic Reply: Regarding Your Email\",\n  \"body\": \"Thank you for your email.\\n\\nPlease be advised that this message appears to be an unsolicited promotional offer. I do not engage with such communications.\\n\\nFor legitimate inquiries, please use official and verified communication channels.\\n\\nSincerely,\\n[Your Name]\",\n  \"follow_up_suggestions\": [\n      \"Mark this email as spam in your inbox.\",\n      \"Block the sender to prevent similar emails.\"\n  ]\n}",
+    "timestamp": "2025-11-20T13:27:04.355Z",
+    "originalEmailId": "3"
+  },
+  {
+    "id": 1763974083825,
+    "type": "agent_result",
+    "title": "Analysis: Weekly Tech Roundup: AI Breakthroughs",
+    "content": "{\n  \"subject\": \"Re: This week in tech\",\n  \"body\": \"Thank you for sharing this week's tech roundup. I appreciate the update.\",\n  \"follow_up_suggestions\": []\n}",
+    "query": "Draft a reply",
+    "emailSubject": "Weekly Tech Roundup: AI Breakthroughs",
+    "emailSender": "newsletter@techcrunch.com",
+    "timestamp": "2025-11-24T08:48:03.826Z",
+    "originalEmailId": "2"
+  },
+  {
+    "id": 1763974334030,
+    "subject": "Re: Weekly Tech Roundup: AI Breakthroughs",
+    "body": "{\n  \"subject\": \"Re: This week in tech: Major AI companies announce new models, startup funding hits record highs, and quantum computing makes progress.\",\n  \"body\": \"Thank you for sharing this week's tech roundup. I appreciate the summary of key developments, including major AI company announcements, record-high startup funding, and advancements in quantum computing. I will take some time to read the full article on TechCrunch.com.\",\n  \"follow_up_suggestions\": []\n}",
+    "timestamp": "2025-11-24T08:52:14.030Z",
+    "originalEmailId": "2"
+  }
+]

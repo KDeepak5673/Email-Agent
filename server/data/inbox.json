@@ -1,0 +1,142 @@
+[
+  {
+    "id": "1",
+    "sender": "boss@example.com",
+    "subject": "Submit weekly report",
+    "timestamp": "2025-11-20 09:30",
+    "body": "Hey, please send me the weekly report by today evening. Make sure to include the Q4 projections."
+  },
+  {
+    "id": "2",
+    "sender": "newsletter@techcrunch.com",
+    "subject": "Weekly Tech Roundup: AI Breakthroughs",
+    "timestamp": "2025-11-19 08:00",
+    "body": "This week in tech: Major AI companies announce new models, startup funding hits record highs, and quantum computing makes progress. Read the full roundup at techcrunch.com."
+  },
+  {
+    "id": "3",
+    "sender": "spam@randomoffers.com",
+    "subject": "WIN A FREE IPHONE NOW!!!",
+    "timestamp": "2025-11-18 14:22",
+    "body": "CONGRATULATIONS! You've been selected to win a brand new iPhone 15 Pro Max. Click here to claim your prize. Limited time offer!"
+  },
+  {
+    "id": "4",
+    "sender": "mom@example.com",
+    "subject": "Family dinner this weekend",
+    "timestamp": "2025-11-17 19:45",
+    "body": "Hi dear, we're planning a family dinner on Saturday at 6 PM. Can you make it? Let me know what dish you'd like to bring. Love, Mom"
+  },
+  {
+    "id": "5",
+    "sender": "hr@company.com",
+    "subject": "Performance Review Meeting - Tomorrow 2 PM",
+    "timestamp": "2025-11-16 10:15",
+    "body": "Your annual performance review is scheduled for tomorrow at 2 PM in Conference Room A. Please come prepared to discuss your achievements and goals for next year."
+  },
+  {
+    "id": "6",
+    "sender": "client@business.com",
+    "subject": "Project deadline extension request",
+    "timestamp": "2025-11-15 11:30",
+    "body": "Due to unforeseen circumstances, we need to request a 2-week extension on the project deadline. Can we discuss this in our next meeting?"
+  },
+  {
+    "id": "7",
+    "sender": "amazon@orders.com",
+    "subject": "Your order has shipped",
+    "timestamp": "2025-11-14 16:20",
+    "body": "Your order #12345 has shipped and is expected to arrive by November 22nd. Track your package at amazon.com/orders."
+  },
+  {
+    "id": "8",
+    "sender": "team@project.com",
+    "subject": "URGENT: Code Review Required - API Authentication",
+    "timestamp": "2025-11-13 15:45",
+    "body": "Hi team, I've pushed the new authentication module to the dev branch. This needs urgent review as it's blocking the login functionality. Please review and merge by EOD. Critical path item for tomorrow's demo."
+  },
+  {
+    "id": "9",
+    "sender": "calendar@company.com",
+    "subject": "Meeting Request: Q4 Planning Session",
+    "timestamp": "2025-11-12 11:20",
+    "body": "You have been invited to 'Q4 Planning Session' on Thursday, November 23rd from 10:00 AM to 12:00 PM in Conference Room B. Agenda: Review Q4 goals, budget planning, and resource allocation. Please RSVP by Wednesday."
+  },
+  {
+    "id": "10",
+    "sender": "security@bank.com",
+    "subject": "Security Alert: Unusual Account Activity",
+    "timestamp": "2025-11-11 08:30",
+    "body": "We detected unusual activity on your account ending in ****1234. If this wasn't you, please contact us immediately at 1-800-SECURE or log in to your account to review recent transactions."
+  },
+  {
+    "id": "11",
+    "sender": "newsletter@designweekly.com",
+    "subject": "Design Trends 2026: What to Expect",
+    "timestamp": "2025-11-10 07:00",
+    "body": "Welcome to Design Weekly! This month we're exploring the emerging design trends for 2026. From AI-assisted design tools to sustainable materials, discover what's shaping the future of design. Plus: interviews with top designers and free design resources."
+  },
+  {
+    "id": "12",
+    "sender": "recruiter@techjobs.com",
+    "subject": "Senior Developer Position - $150k + Equity",
+    "timestamp": "2025-11-09 14:15",
+    "body": "Hi! I came across your profile and think you'd be perfect for our Senior Full-Stack Developer position. We're a Series A startup building the next generation of collaboration tools. Competitive salary, full benefits, and significant equity package. Interested in learning more?"
+  },
+  {
+    "id": "13",
+    "sender": "project-manager@company.com",
+    "subject": "Project Alpha Status Update",
+    "timestamp": "2025-11-08 16:00",
+    "body": "Team, here's the weekly status update for Project Alpha:\n\n✅ Frontend development: 85% complete\n✅ Backend API: 92% complete\n⚠️ Testing phase: Started, 2 blockers identified\n❌ Documentation: Not started\n\nNext milestone: Beta release on December 1st. Please update your task status in the project board."
+  },
+  {
+    "id": "14",
+    "sender": "support@streaming.com",
+    "subject": "Your Subscription is About to Expire",
+    "timestamp": "2025-11-07 12:45",
+    "body": "Hi there! Your premium subscription expires in 3 days. Don't miss out on unlimited streaming, offline downloads, and exclusive content. Renew now and save 20% with code RENEW20. Questions? Contact our support team."
+  },
+  {
+    "id": "15",
+    "sender": "colleague@company.com",
+    "subject": "Quick favor: Can you review this document?",
+    "timestamp": "2025-11-06 10:30",
+    "body": "Hey, I need someone to quickly review this proposal before I send it to the client. It's only 2 pages and should take 5 minutes. Can you take a look? I've attached it below. Thanks so much!"
+  },
+  {
+    "id": "16",
+    "sender": "events@conference.com",
+    "subject": "Early Bird Registration: Tech Summit 2026",
+    "timestamp": "2025-11-05 09:00",
+    "body": "Don't miss out! Early bird registration for Tech Summit 2026 ends this Friday. Join 5000+ attendees for 3 days of keynotes, workshops, and networking. Special rates available for teams. Register now and save up to $300!"
+  },
+  {
+    "id": "17",
+    "sender": "notifications@github.com",
+    "subject": "Pull Request #247: Add User Authentication",
+    "timestamp": "2025-11-04 17:20",
+    "body": "You have been mentioned on a pull request in the company/main-repo repository.\n\n@username requested your review on: 'Add User Authentication'\n\nThis PR implements JWT-based authentication with refresh tokens. Please review the security implementation and test coverage."
+  },
+  {
+    "id": "18",
+    "sender": "marketing@competitor.com",
+    "subject": "Revolutionary AI Tool - Try It Free!",
+    "timestamp": "2025-11-03 13:10",
+    "body": "STOP! Before you continue reading, you NEED to know about our groundbreaking AI productivity tool. 10x faster than competitors, integrates with everything, and it's FREE to try. Limited beta spots available. Claim yours now!"
+  },
+  {
+    "id": "19",
+    "sender": "it-support@company.com",
+    "subject": "System Maintenance: Server Downtime Tonight",
+    "timestamp": "2025-11-02 11:55",
+    "body": "Scheduled maintenance notice: All company servers will be offline tonight from 10 PM to 2 AM EST for critical security updates. This will affect email, internal tools, and development environments. Please save your work and log off by 9:30 PM."
+  },
+  {
+    "id": "20",
+    "sender": "friend@social.com",
+    "subject": "Hey! Long time no see - Coffee this week?",
+    "timestamp": "2025-11-01 20:30",
+    "body": "Hey! It's been ages since we caught up. How about grabbing coffee this week? I'm free Wednesday afternoon or Friday morning. Let me know what works for you. Would love to hear about what you've been up to!"
+  }
+]
