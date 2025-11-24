@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import Dialog from "../components/Dialog";
 import { api } from "../api";
 import "./InboxPage.css";
 
 export default function InboxPage() {
+  const [dialog, setDialog] = useState(null);
   const [inbox, setInbox] = useState([]);
   const [filteredInbox, setFilteredInbox] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -22,7 +24,7 @@ export default function InboxPage() {
       const data = await api.loadInbox();
       setInbox(data);
     } catch (e) {
-      alert("Failed to load inbox: " + e.message);
+      setDialog({ type: 'error', title: 'Load Failed', message: 'Failed to load inbox: ' + e.message });
     }
   }
 
@@ -73,7 +75,7 @@ export default function InboxPage() {
         isProcessed: true
       });
     } catch (err) {
-      alert("Processing error: " + err.message);
+      setDialog({ type: 'error', title: 'Processing error', message: 'Processing error: ' + err.message });
     } finally {
       setProcessing(false);
     }
@@ -122,7 +124,7 @@ export default function InboxPage() {
                     <div className="email-subject">{m.subject}</div>
                     <div className="email-meta">
                       <span>{m.sender}</span>
-                      <span>{m.timestamp}</span>
+                      <span>{new Date(m.timestamp || m.created || Date.now()).toLocaleString()}</span>
                     </div>
                   </li>
                 ))}
@@ -139,7 +141,7 @@ export default function InboxPage() {
                   <h3>{selected.email.subject}</h3>
                   <div className="email-meta">
                     <span>{selected.email.sender}</span>
-                    <span>{selected.email.timestamp}</span>
+                    <span>{new Date(selected.email.timestamp || selected.email.created || Date.now()).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -168,9 +170,9 @@ export default function InboxPage() {
                             originalEmailId: selected.email.id
                           };
                           api.saveDraft(draft).then(() => {
-                            alert("✅ Auto-reply saved to drafts!");
+                            setDialog({ type: 'success', title: 'Saved', message: '✅ Auto-reply saved to drafts!' });
                           }).catch(err => {
-                            alert("❌ Failed to save draft: " + err.message);
+                            setDialog({ type: 'error', title: 'Save failed', message: '❌ Failed to save draft: ' + err.message });
                           });
                         }}
                         className="save-draft-btn"
@@ -191,6 +193,15 @@ export default function InboxPage() {
           )}
         </div>
       </div>
+      {dialog && (
+        <Dialog
+          open={!!dialog}
+          type={dialog.type}
+          title={dialog.title}
+          message={dialog.message}
+          onClose={() => setDialog(null)}
+        />
+      )}
     </>
   );
 }

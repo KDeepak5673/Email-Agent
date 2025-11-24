@@ -3,20 +3,22 @@ import { api } from "../api";
 import "./AgentPage.css";
 
 export default function AgentPage() {
+
   const [inbox, setInbox] = useState([]);
   const [email, setEmail] = useState(null);
   const [query, setQuery] = useState("");
   const [conversation, setConversation] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [savedResults, setSavedResults] = useState([]);
-  const [activeView, setActiveView] = useState("chat"); // "chat" or "saved"
+  const [conversations, setConversations] = useState([]);
+  const [activeView, setActiveView] = useState("chat"); // "chat", "conversations", or "inbox-agent"
   const [searchTerm, setSearchTerm] = useState("");
   const [dialog, setDialog] = useState(null);
+  const [emailConversations, setEmailConversations] = useState({}); // Track conversations per email
+  const [currentConversationId, setCurrentConversationId] = useState(null);
 
-  const filteredSavedResults = savedResults.filter(result =>
-    result.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    result.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    result.query.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredConversations = conversations.filter(conv =>
+    conv.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    conv.messages.some(msg => msg.content.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const showDialog = (type, title, message) => {
@@ -29,25 +31,64 @@ export default function AgentPage() {
 
   useEffect(() => {
     loadInbox();
-    loadSavedResults();
+    loadConversations();
   }, []);
+
+  // Auto-select first email after both inbox and conversations are loaded
+  useEffect(() => {
+    if (inbox.length > 0 && conversations.length >= 0 && !email) {
+      selectEmail(inbox[0]);
+    }
+  }, [inbox, conversations, email]);
 
   async function loadInbox() {
     try {
       const data = await api.loadInbox();
       setInbox(data);
-      if (data.length && !email) setEmail(data[0]);
     } catch (e) {
       showDialog("error", "Load Failed", "Failed to load inbox: " + e.message);
     }
   }
 
-  async function loadSavedResults() {
+  // Normalize message timestamps: ensure each message.timestamp is a Date
+  function normalizeMessageTimestamps(messages = []) {
+    return messages.map(m => ({ ...m, timestamp: m.timestamp ? new Date(m.timestamp) : new Date() }));
+  }
+
+  // Format timestamps safely (accepts Date or string)
+  function formatTime(ts) {
+    const d = ts instanceof Date ? ts : new Date(ts);
+    return isNaN(d) ? "" : d.toLocaleTimeString();
+  }
+
+  async function loadConversations() {
     try {
-      const data = await api.loadDrafts();
-      setSavedResults(data.filter(draft => draft.type === "agent_result"));
+      const data = await api.loadConversations();
+      // Normalize timestamps inside each conversation's messages
+      setConversations((data || []).map(conv => ({
+        ...conv,
+        messages: normalizeMessageTimestamps(conv.messages || [])
+      })));
     } catch (e) {
-      console.error("Failed to load saved results:", e);
+      showDialog("error", "Load Failed", "Failed to load conversations: " + e.message);
+    }
+  }
+
+  async function selectEmail(selectedEmail) {
+    setEmail(selectedEmail);
+
+    // Check if there's an existing conversation for this email
+    const existingConversation = conversations.find(conv =>
+      conv.emailId === selectedEmail.id && conv.type === "conversation"
+    );
+
+    if (existingConversation) {
+      setConversation(normalizeMessageTimestamps(existingConversation.messages));
+      setCurrentConversationId(existingConversation.id);
+    } else {
+      // Start fresh conversation for this email
+      setConversation([]);
+      setCurrentConversationId(null);
     }
   }
 
@@ -58,7 +99,8 @@ export default function AgentPage() {
     }
 
     const userMessage = { type: "user", content: query, timestamp: new Date() };
-    setConversation(prev => [...prev, userMessage]);
+    const newConversation = [...conversation, userMessage];
+    setConversation(newConversation);
     setLoading(true);
 
     try {
@@ -67,95 +109,147 @@ export default function AgentPage() {
         type: "agent",
         content: resp.result,
         timestamp: new Date(),
-        id: Date.now(),
-        emailId: email.id,
         query: query
       };
-      setConversation(prev => [...prev, agentMessage]);
+      const finalConversation = [...newConversation, agentMessage];
+      setConversation(finalConversation);
       setQuery("");
+
+      // Auto-save the conversation
+      await saveConversation(finalConversation, email);
     } catch (err) {
       const errorMessage = { type: "error", content: "Agent error: " + err.message, timestamp: new Date() };
-      setConversation(prev => [...prev, errorMessage]);
+      const finalConversation = [...newConversation, errorMessage];
+      setConversation(finalConversation);
     } finally {
       setLoading(false);
     }
   }
 
-  async function saveResult(message) {
+  async function saveConversation(messages, emailContext) {
     try {
-      const savedResult = {
-        id: Date.now(),
-        type: "agent_result",
-        title: `Analysis: ${email.subject}`,
-        content: message.content,
-        query: message.query,
-        emailSubject: email.subject,
-        emailSender: email.sender,
+      const conversationData = {
+        id: currentConversationId || Date.now(),
+        type: "conversation",
+        title: `Chat: ${emailContext.subject}`,
+        messages: messages,
+        emailSubject: emailContext.subject,
+        emailSender: emailContext.sender,
         timestamp: new Date().toISOString(),
-        originalEmailId: email.id
+        emailId: emailContext.id
       };
 
-      await api.saveDraft(savedResult);
-      setSavedResults(prev => [savedResult, ...prev]);
-      showDialog("success", "Saved", "Result saved successfully!");
+      // If updating existing conversation, delete it first
+      if (currentConversationId) {
+        await api.deleteConversation(currentConversationId);
+      }
+
+      await api.saveConversation(conversationData);
+      setCurrentConversationId(conversationData.id);
+
+      // Update conversations list
+      setConversations(prev => {
+        const filtered = prev.filter(conv => conv.id !== conversationData.id);
+        return [{ ...conversationData, messages: normalizeMessageTimestamps(conversationData.messages || []) }, ...filtered];
+      });
     } catch (err) {
-      showDialog("error", "Save Failed", "Failed to save result: " + err.message);
+      console.error("Failed to save conversation:", err);
     }
   }
-
-  async function deleteSavedResult(id) {
-    try {
-      await api.deleteDraft(id);
-      setSavedResults(prev => prev.filter(result => result.id !== id));
-      showDialog("success", "Deleted", "Result deleted!");
-    } catch (err) {
-      showDialog("error", "Delete Failed", "Failed to delete result: " + err.message);
-    }
-  }
-
-  const [editingResult, setEditingResult] = useState(null);
-  const [editContent, setEditContent] = useState("");
 
   async function startNewConversation() {
+    if (!email) return;
+
     setConversation([]);
-    setQuery("");
-    showDialog("success", "New Conversation", "Started new conversation!");
+    setCurrentConversationId(null);
+    showDialog("success", "New Conversation", `Started new conversation for "${email.subject}"`);
   }
 
-  async function editSavedResult(result) {
-    setEditingResult(result);
-    setEditContent(result.content);
-    setActiveView("chat"); // Switch to chat view for editing
+  async function loadConversation(conv) {
+    setConversation(normalizeMessageTimestamps(conv.messages));
+    setCurrentConversationId(conv.id);
+
+    // Find and set the associated email
+    const associatedEmail = inbox.find(e => e.id === conv.emailId);
+    if (associatedEmail) {
+      setEmail(associatedEmail);
+    }
+
+    setActiveView("chat");
   }
 
-  async function saveEditedResult() {
-    if (!editingResult) return;
+  async function deleteConversation(id) {
+    try {
+      await api.deleteConversation(id);
+      setConversations(prev => prev.filter(conv => conv.id !== id));
+      if (currentConversationId === id) {
+        setConversation([]);
+        setCurrentConversationId(null);
+      }
+      showDialog("success", "Deleted", "Conversation deleted!");
+    } catch (err) {
+      showDialog("error", "Delete Failed", "Failed to delete conversation: " + err.message);
+    }
+  }
+
+  async function askInboxAgent() {
+    if (!query.trim()) {
+      showDialog("warning", "Input Required", "Please enter a question about your inbox.");
+      return;
+    }
+
+    const userMessage = { type: "user", content: query, timestamp: new Date() };
+    const newConversation = [...conversation, userMessage];
+    setConversation(newConversation);
+    setLoading(true);
 
     try {
-      const updatedResult = {
-        ...editingResult,
-        content: editContent,
+      const resp = await api.inboxAgentQuery({ inbox, userQuery: query });
+      const agentMessage = {
+        type: "agent",
+        content: resp.result,
+        timestamp: new Date(),
+        query: query
+      };
+      const finalConversation = [...newConversation, agentMessage];
+      setConversation(finalConversation);
+      setQuery("");
+
+      // Auto-save the inbox conversation
+      await saveInboxConversation(finalConversation);
+    } catch (err) {
+      const errorMessage = { type: "error", content: "Agent error: " + err.message, timestamp: new Date() };
+      const finalConversation = [...newConversation, errorMessage];
+      setConversation(finalConversation);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function saveInboxConversation(messages) {
+    try {
+      const conversationData = {
+        id: currentConversationId || Date.now(),
+        type: "inbox_conversation",
+        title: `Inbox Chat: ${messages[0]?.content.substring(0, 50)}...`,
+        messages: messages,
         timestamp: new Date().toISOString()
       };
 
-      // Update the result in savedResults
-      setSavedResults(prev => prev.map(r => r.id === editingResult.id ? updatedResult : r));
+      if (currentConversationId) {
+        await api.deleteConversation(currentConversationId);
+      }
 
-      // Also update in the backend
-      await api.deleteDraft(editingResult.id);
-      await api.saveDraft(updatedResult);
+      await api.saveConversation(conversationData);
+      setCurrentConversationId(conversationData.id);
 
-      setEditingResult(null);
-      setEditContent("");
-      showDialog("success", "Updated", "Draft updated successfully!");
+      setConversations(prev => {
+        const filtered = prev.filter(conv => conv.id !== conversationData.id);
+        return [{ ...conversationData, messages: normalizeMessageTimestamps(conversationData.messages || []) }, ...filtered];
+      });
     } catch (err) {
-      showDialog("error", "Update Failed", "Failed to update draft: " + err.message);
+      console.error("Failed to save inbox conversation:", err);
     }
-  }
-
-  async function cancelEdit() {
-    setEditingResult(null);
-    setEditContent("");
   }
 
   return (
@@ -182,7 +276,7 @@ export default function AgentPage() {
                   <li
                     key={e.id}
                     className={`email-list-item ${email?.id === e.id ? "active" : ""}`}
-                    onClick={() => setEmail(e)}
+                    onClick={() => selectEmail(e)}
                   >
                     <div className="email-list-subject">{e.subject}</div>
                     <div className="email-list-sender">{e.sender}</div>
@@ -204,14 +298,20 @@ export default function AgentPage() {
                 className={`agent-tab ${activeView === "chat" ? "active" : ""}`}
                 onClick={() => setActiveView("chat")}
               >
-                🤖 Agent Chat
+                🤖 Email Agent
               </button>
               <button
-                className={`agent-tab ${activeView === "saved" ? "active" : ""}`}
-                onClick={() => setActiveView("saved")}
+                className={`agent-tab ${activeView === "inbox-agent" ? "active" : ""}`}
+                onClick={() => setActiveView("inbox-agent")}
               >
-                💾 Saved Results ({savedResults.length})
+                📧 Inbox Agent
               </button>
+              {/* <button
+                className={`agent-tab ${activeView === "conversations" ? "active" : ""}`}
+                onClick={() => setActiveView("conversations")}
+              >
+                💬 Conversations ({conversations.length})
+              </button> */}
             </div>
           </div>
 
@@ -219,127 +319,82 @@ export default function AgentPage() {
             /* Chat View */
             email ? (
               <div className="agent-chat-area">
-                {editingResult ? (
-                  /* Edit Mode */
-                  <div className="agent-edit-area">
-                    <div className="agent-edit-header">
-                      <h3 className="agent-edit-title">✏️ Edit Draft Reply</h3>
-                      <div className="agent-edit-actions">
-                        <button onClick={cancelEdit} className="cancel-edit-btn">
-                          ❌ Cancel
-                        </button>
-                        <button onClick={saveEditedResult} className="save-edit-btn">
-                          💾 Save Changes
-                        </button>
-                      </div>
+                <div className="agent-context-section">
+                  <div className="agent-context-card">
+                    <div className="agent-context-header">
+                      <h4 className="agent-context-title">📄 Context Email</h4>
+                      <button
+                        onClick={startNewConversation}
+                        className="new-conversation-btn"
+                        title="Start new conversation"
+                      >
+                        🔄 New Conversation
+                      </button>
                     </div>
-                    <div className="agent-edit-content">
-                      <div className="edit-info">
-                        <strong>Original Query:</strong> {editingResult.query}
-                      </div>
-                      <div className="edit-info">
-                        <strong>Email:</strong> {editingResult.emailSubject}
-                      </div>
-                      <textarea
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        className="agent-edit-textarea"
-                        placeholder="Edit your draft reply..."
-                        rows="15"
-                      />
+                    <div className="agent-context-content">
+                      <strong>{email.subject}</strong>
+                      <div className="text-text-muted mt-xs">{email.sender} • {new Date(email.timestamp || email.created || Date.now()).toLocaleString()}</div>
+                      <div className="agent-context-preview">{email.body.substring(0, 200)}...</div>
                     </div>
                   </div>
-                ) : (
-                  <>
-                    <div className="agent-context-section">
-                      <div className="agent-context-card">
-                        <div className="agent-context-header">
-                          <h4 className="agent-context-title">📄 Context Email</h4>
-                          <button
-                            onClick={startNewConversation}
-                            className="new-conversation-btn"
-                            title="Start new conversation"
-                          >
-                            🔄 New Conversation
-                          </button>
-                        </div>
-                        <div className="agent-context-content">
-                          <strong>{email.subject}</strong>
-                          <div className="text-text-muted mt-xs">{email.sender} • {email.timestamp}</div>
-                          <div className="agent-context-preview">{email.body.substring(0, 200)}...</div>
-                        </div>
-                      </div>
-                    </div>
+                </div>
 
-                    {/* Chat Messages */}
-                    <div className="agent-messages-container">
-                      {conversation.length === 0 ? (
-                        <div className="agent-empty-chat">
-                          <h3 className="agent-empty-title">Start a Conversation</h3>
-                          <p className="agent-empty-text">Ask the agent about this email. Try questions like:</p>
-                          <ul className="agent-suggestions">
-                            <li>• "Summarize this email"</li>
-                            <li>• "What action items are there?"</li>
-                            <li>• "Draft a reply"</li>
-                          </ul>
-                        </div>
-                      ) : (
-                        <div className="space-y-md">
-                          {conversation.map((msg, index) => (
-                            <div key={index} className="agent-message-group">
-                              <div className={`agent-message-bubble ${msg.type}`}>
-                                <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
-                                <div className="agent-message-timestamp">
-                                  {msg.timestamp.toLocaleTimeString()}
-                                </div>
-                                {msg.type === "agent" && (
-                                  <div className="agent-message-actions">
-                                    <button
-                                      onClick={() => saveResult(msg)}
-                                      className="save-result-btn"
-                                      title="Save this result"
-                                    >
-                                      💾 Save
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
+                {/* Chat Messages */}
+                <div className="agent-messages-container">
+                  {conversation.length === 0 ? (
+                    <div className="agent-empty-chat">
+                      <h3 className="agent-empty-title">Start a Conversation</h3>
+                      <p className="agent-empty-text">Ask the agent about this email. Try questions like:</p>
+                      <ul className="agent-suggestions">
+                        <li>• "Summarize this email"</li>
+                        <li>• "What action items are there?"</li>
+                        <li>• "Draft a reply"</li>
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="space-y-md">
+                      {conversation.map((msg, index) => (
+                        <div key={index} className="agent-message-group">
+                          <div className={`agent-message-bubble ${msg.type}`}>
+                            <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                            <div className="agent-message-timestamp">
+                              {formatTime(msg.timestamp)}
                             </div>
-                          ))}
+                          </div>
                         </div>
-                      )}
+                      ))}
                     </div>
+                  )}
+                </div>
 
-                    {/* Input Section */}
-                    <div className="agent-input-section">
-                      <div className="agent-input-container">
-                        <textarea
-                          placeholder="Ask the agent (e.g., Summarize this, What tasks?, Draft reply in friendly tone)"
-                          value={query}
-                          onChange={(e) => setQuery(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              askAgent();
-                            }
-                          }}
-                          className="agent-input"
-                          rows="2"
-                        />
-                        <button
-                          onClick={askAgent}
-                          disabled={loading || !query.trim()}
-                          className="agent-send-btn"
-                        >
-                          {loading ? "Sending..." : "Send"}
-                        </button>
-                      </div>
-                      <div className="agent-input-help">
-                        Press Enter to send, Shift+Enter for new line
-                      </div>
-                    </div>
-                  </>
-                )}
+                {/* Input Section */}
+                <div className="agent-input-section">
+                  <div className="agent-input-container">
+                    <textarea
+                      placeholder="Ask the agent (e.g., Summarize this, What tasks?, Draft reply in friendly tone)"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          askAgent();
+                        }
+                      }}
+                      className="agent-input"
+                      rows="2"
+                    />
+                    <button
+                      onClick={askAgent}
+                      disabled={loading || !query.trim()}
+                      className="agent-send-btn"
+                    >
+                      {loading ? "Sending..." : "Send"}
+                    </button>
+                  </div>
+                  <div className="agent-input-help">
+                    Press Enter to send, Shift+Enter for new line
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="agent-empty-chat">
@@ -348,15 +403,95 @@ export default function AgentPage() {
                 <p className="agent-empty-text">Select an email from the left to start chatting with the AI agent.</p>
               </div>
             )
+          ) : activeView === "inbox-agent" ? (
+            /* Inbox Agent View */
+            <div className="agent-chat-area">
+              <div className="agent-context-section">
+                <div className="agent-context-card">
+                  <div className="agent-context-header">
+                    <h4 className="agent-context-title">📧 Inbox Overview</h4>
+                    <button
+                      onClick={startNewConversation}
+                      className="new-conversation-btn"
+                      title="Start new conversation"
+                    >
+                      🔄 New Conversation
+                    </button>
+                  </div>
+                  <div className="agent-context-content">
+                    <strong>{inbox.length} emails in inbox</strong>
+                    <div className="text-text-muted mt-xs">Ask questions about your entire inbox</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="agent-messages-container">
+                {conversation.length === 0 ? (
+                  <div className="agent-empty-chat">
+                    <h3 className="agent-empty-title">Ask About Your Inbox</h3>
+                    <p className="agent-empty-text">Try questions like:</p>
+                    <ul className="agent-suggestions">
+                      <li>• "Show me all urgent emails"</li>
+                      <li>• "Find emails from last week"</li>
+                      <li>• "What meetings do I have today?"</li>
+                      <li>• "Summarize unread emails"</li>
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="space-y-md">
+                    {conversation.map((msg, index) => (
+                      <div key={index} className="agent-message-group">
+                        <div className={`agent-message-bubble ${msg.type}`}>
+                          <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                          <div className="agent-message-timestamp">
+                            {formatTime(msg.timestamp)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Input Section */}
+              <div className="agent-input-section">
+                <div className="agent-input-container">
+                  <textarea
+                    placeholder="Ask about your inbox (e.g., Show me urgent emails, Find emails from John)"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        askInboxAgent();
+                      }
+                    }}
+                    className="agent-input"
+                    rows="2"
+                  />
+                  <button
+                    onClick={askInboxAgent}
+                    disabled={loading || !query.trim()}
+                    className="agent-send-btn"
+                  >
+                    {loading ? "Thinking..." : "Ask"}
+                  </button>
+                </div>
+                <div className="agent-input-help">
+                  Press Enter to send, Shift+Enter for new line
+                </div>
+              </div>
+            </div>
           ) : (
-            /* Saved Results View */
+            /* Conversations View */
             <div className="agent-saved-area">
               {/* Search Bar */}
               <div className="agent-search-section">
                 <div className="agent-search-container">
                   <input
                     type="text"
-                    placeholder="Search saved results..."
+                    placeholder="Search conversations..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="agent-search-input"
@@ -365,36 +500,36 @@ export default function AgentPage() {
                 </div>
               </div>
 
-              {/* Saved Results List */}
+              {/* Conversations List */}
               <div className="agent-saved-list">
-                {filteredSavedResults.length === 0 ? (
+                {filteredConversations.length === 0 ? (
                   <div className="agent-empty-saved">
-                    <div className="empty-icon">📄</div>
-                    <h3>No Saved Results</h3>
-                    <p>Save agent responses to access them later. Click the 💾 Save button on any agent response.</p>
+                    <div className="empty-icon">💬</div>
+                    <h3>No Conversations</h3>
+                    <p>Start chatting with the agents to see your conversation history here.</p>
                   </div>
                 ) : (
                   <div className="saved-results-grid">
-                    {filteredSavedResults.map(result => (
-                      <div key={result.id} className="saved-result-card">
+                    {filteredConversations.map(conv => (
+                      <div key={conv.id} className="saved-result-card">
                         <div className="saved-result-header">
-                          <h4 className="saved-result-title">{result.title}</h4>
+                          <h4 className="saved-result-title">{conv.title}</h4>
                           <div className="saved-result-meta">
                             <span className="saved-result-date">
-                              {new Date(result.timestamp).toLocaleDateString()}
+                              {new Date(conv.timestamp).toLocaleDateString()}
                             </span>
                             <div className="saved-result-actions">
                               <button
-                                onClick={() => editSavedResult(result)}
+                                onClick={() => loadConversation(conv)}
                                 className="edit-result-btn"
-                                title="Edit this result"
+                                title="Load this conversation"
                               >
-                                ✏️
+                                📂
                               </button>
                               <button
-                                onClick={() => deleteSavedResult(result.id)}
+                                onClick={() => deleteConversation(conv.id)}
                                 className="delete-result-btn"
-                                title="Delete this result"
+                                title="Delete this conversation"
                               >
                                 🗑️
                               </button>
@@ -402,18 +537,31 @@ export default function AgentPage() {
                           </div>
                         </div>
                         <div className="saved-result-content">
-                          <div className="saved-result-query">
-                            <strong>Query:</strong> {result.query}
-                          </div>
-                          <div className="saved-result-response">
-                            <pre>{result.content}</pre>
+                          <div className="saved-result-messages">
+                            {conv.messages.slice(0, 2).map((msg, idx) => (
+                              <div key={idx} className={`message-preview ${msg.type}`}>
+                                <strong>{msg.type === 'user' ? 'You:' : 'Agent:'}</strong> {msg.content.substring(0, 100)}...
+                              </div>
+                            ))}
+                            {conv.messages.length > 2 && (
+                              <div className="message-preview more">
+                                ... and {conv.messages.length - 2} more messages
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <div className="saved-result-footer">
-                          <span className="saved-result-email">
-                            From: {result.emailSubject}
-                          </span>
-                        </div>
+                        {conv.emailSubject && (
+                          <div className="saved-result-footer">
+                            <span className="saved-result-email">
+                              📧 {conv.emailSubject}
+                            </span>
+                            {conv.emailSender && (
+                              <span className="saved-result-sender">
+                                from {conv.emailSender}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

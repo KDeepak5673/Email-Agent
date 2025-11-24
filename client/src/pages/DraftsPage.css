@@ -155,6 +155,8 @@
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: var(--space-sm);
+    flex-wrap: wrap;
+    gap: var(--space-sm);
 }
 
 .draft-subject {
@@ -340,5 +342,362 @@
 
     .drafts-subtitle {
         font-size: var(--font-size-md);
+    }
+}
+
+/* Edit Modal Styles */
+.edit-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.edit-modal {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--bg-accent);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    animation: slideIn 0.2s ease-out;
+}
+
+.edit-modal-header {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--bg-accent);
+    background: var(--bg-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.edit-modal-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.edit-modal-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: var(--space-xs);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-modal-close:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.edit-modal-content {
+    padding: var(--space-lg);
+    max-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-accent) transparent;
+}
+
+.edit-modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.edit-modal-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.edit-modal-content::-webkit-scrollbar-thumb {
+    background: var(--bg-accent);
+    border-radius: 3px;
+}
+
+.edit-modal-content::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+.edit-modal-actions {
+    padding: var(--space-lg);
+    border-top: 1px solid var(--bg-accent);
+    background: var(--bg-secondary);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+}
+
+.cancel-edit-btn {
+    background: var(--bg-accent);
+    color: var(--text-primary);
+    border: 1px solid var(--bg-accent);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.cancel-edit-btn:hover {
+    background: var(--bg-hover);
+}
+
+.save-edit-btn {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.save-edit-btn:hover {
+    background: var(--success-hover);
+    transform: translateY(-1px);
+}
+
+/* Draft Actions */
+.draft-actions {
+    display: flex;
+    gap: var(--space-xs);
+    margin-right: var(--space-md);
+}
+
+.edit-draft-btn {
+    background: var(--info);
+    color: white;
+    border: none;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.edit-draft-btn:hover {
+    background: var(--info-hover);
+    transform: translateY(-1px);
+}
+
+.delete-draft-btn {
+    background: var(--error);
+    color: white;
+    border: none;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.delete-draft-btn:hover {
+    background: var(--error-hover);
+    transform: translateY(-1px);
+}
+
+/* Dialog Styles */
+.dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.dialog-box {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--bg-accent);
+    max-width: 400px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    animation: slideIn 0.2s ease-out;
+}
+
+.dialog-header {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--bg-accent);
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.dialog-icon {
+    font-size: var(--font-size-xl);
+    flex-shrink: 0;
+}
+
+.dialog-icon.success {
+    color: var(--success);
+}
+
+.dialog-icon.error {
+    color: var(--error);
+}
+
+.dialog-icon.warning {
+    color: var(--warning);
+}
+
+.dialog-icon.info {
+    color: var(--info);
+}
+
+.dialog-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    flex: 1;
+}
+
+.dialog-close-btn {
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: var(--space-xs);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dialog-close-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.dialog-content {
+    padding: var(--space-lg);
+}
+
+.dialog-content p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.dialog-actions {
+    padding: var(--space-lg);
+    border-top: 1px solid var(--bg-accent);
+    background: var(--bg-secondary);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.dialog-ok-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-width: 80px;
+}
+
+.dialog-ok-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive modal adjustments */
+@media (max-width: 480px) {
+    .edit-modal {
+        margin: var(--space-md);
+        width: calc(100% - 2 * var(--space-md));
+    }
+
+    .edit-modal-header {
+        padding: var(--space-md);
+    }
+
+    .edit-modal-content {
+        padding: var(--space-md);
+    }
+
+    .edit-modal-actions {
+        padding: var(--space-md);
+    }
+
+    .dialog-box {
+        margin: var(--space-md);
+        width: calc(100% - 2 * var(--space-md));
+    }
+
+    .dialog-header {
+        padding: var(--space-md);
+    }
+
+    .dialog-content {
+        padding: var(--space-md);
+    }
+
+    .dialog-actions {
+        padding: var(--space-md);
     }
 }

@@ -7,6 +7,18 @@ export default function DraftsPage() {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
+  const [dialog, setDialog] = useState(null);
+  const [editingDraft, setEditingDraft] = useState(null);
+  const [editSubject, setEditSubject] = useState("");
+  const [editBody, setEditBody] = useState("");
+
+  const showDialog = (type, title, message) => {
+    setDialog({ type, title, message });
+  };
+
+  const closeDialog = () => {
+    setDialog(null);
+  };
 
   useEffect(() => {
     load();
@@ -15,15 +27,17 @@ export default function DraftsPage() {
   async function load() {
     try {
       const d = await api.loadDrafts();
-      setDrafts(d);
+      // Filter to only show manual email drafts (not agent results or conversations)
+      const manualDrafts = d.filter(draft => !draft.type || draft.type === undefined);
+      setDrafts(manualDrafts);
     } catch (e) {
-      alert("Failed to load drafts: " + e.message);
+      showDialog("error", "Load Failed", "Failed to load drafts: " + e.message);
     }
   }
 
   async function save() {
     if (!subject.trim() || !body.trim()) {
-      alert("Please fill in both subject and body.");
+      showDialog("warning", "Input Required", "Please fill in both subject and body.");
       return;
     }
 
@@ -39,11 +53,62 @@ export default function DraftsPage() {
       setSubject("");
       setBody("");
       load();
-      alert("✅ Draft saved successfully!");
+      showDialog("success", "Saved", "Draft saved successfully!");
     } catch (e) {
-      alert("❌ Save failed: " + e.message);
+      showDialog("error", "Save Failed", "Save failed: " + e.message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function startEdit(draft) {
+    setEditingDraft(draft);
+    setEditSubject(draft.subject);
+    setEditBody(draft.body);
+  }
+
+  async function saveEdit() {
+    if (!editingDraft) return;
+
+    if (!editSubject.trim() || !editBody.trim()) {
+      showDialog("warning", "Input Required", "Please fill in both subject and body.");
+      return;
+    }
+
+    try {
+      const updatedDraft = {
+        ...editingDraft,
+        subject: editSubject.trim(),
+        body: editBody.trim(),
+        created: new Date().toISOString()
+      };
+
+      await api.deleteDraft(editingDraft.id);
+      await api.saveDraft(updatedDraft);
+
+      setEditingDraft(null);
+      setEditSubject("");
+      setEditBody("");
+      load();
+      showDialog("success", "Updated", "Draft updated successfully!");
+    } catch (e) {
+      showDialog("error", "Update Failed", "Failed to update draft: " + e.message);
+    }
+  }
+
+  async function cancelEdit() {
+    setEditingDraft(null);
+    setEditSubject("");
+    setEditBody("");
+  }
+
+  async function deleteDraft(id) {
+    try {
+      await api.deleteDraft(id);
+      load();
+      showDialog("success", "Deleted", "Draft deleted successfully!");
+    } catch (e) {
+      showDialog("error", "Delete Failed", "Failed to delete draft: " + e.message);
     }
   }
 
@@ -56,28 +121,7 @@ export default function DraftsPage() {
         </p>
       </div>
 
-      <div className="drafts-stats">
-        <div className="drafts-stat-card">
-          <div className="drafts-stat-number">{drafts.length}</div>
-          <div className="drafts-stat-label">Total Drafts</div>
-        </div>
-        <div className="drafts-stat-card">
-          <div className="drafts-stat-number">
-            {drafts.filter(d => {
-              const today = new Date();
-              const draftDate = new Date(d.created);
-              return draftDate.toDateString() === today.toDateString();
-            }).length}
-          </div>
-          <div className="drafts-stat-label">Created Today</div>
-        </div>
-        <div className="drafts-stat-card">
-          <div className="drafts-stat-number">
-            {drafts.length > 0 ? Math.round(drafts.reduce((sum, d) => sum + d.body.length, 0) / drafts.length) : 0}
-          </div>
-          <div className="drafts-stat-label">Avg Length</div>
-        </div>
-      </div>
+
 
       <div className="drafts-content">
         {/* New Draft Form */}
@@ -139,11 +183,33 @@ export default function DraftsPage() {
                   <div key={d.id} className="draft-item">
                     <div className="draft-item-header">
                       <h4 className="draft-subject">{d.subject}</h4>
+                      <div className="draft-actions">
+                        {!(typeof d.body === 'string' && d.body.startsWith('{') && d.body.includes('"subject"') && d.body.includes('"body"')) && (
+                          <button
+                            onClick={() => startEdit(d)}
+                            className="edit-draft-btn"
+                            title="Edit this draft"
+                          >
+                            ✏️ Edit
+                          </button>
+                        )}
+                        <button
+                          onClick={() => deleteDraft(d.id)}
+                          className="delete-draft-btn"
+                          title="Delete this draft"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
                       <span className="draft-timestamp">
-                        {new Date(d.created).toLocaleDateString()} {new Date(d.created).toLocaleTimeString()}
+                        {new Date(d.created || d.timestamp).toLocaleDateString()} {new Date(d.created || d.timestamp).toLocaleTimeString()}
                       </span>
                     </div>
-                    <div className="draft-preview">{d.body}</div>
+                    <div className="draft-preview">
+                      {typeof d.body === 'string' && d.body.startsWith('{') && d.body.includes('"subject"') && d.body.includes('"body"')
+                        ? 'This draft contains structured data and cannot be displayed here.'
+                        : d.body.substring(0, 200) + (d.body.length > 200 ? '...' : '')}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -151,6 +217,68 @@ export default function DraftsPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Draft Modal */}
+      {editingDraft && (
+        <div className="edit-modal-overlay" onClick={cancelEdit}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="edit-modal-header">
+              <h3 className="edit-modal-title">✏️ Edit Draft</h3>
+              <button onClick={cancelEdit} className="edit-modal-close">×</button>
+            </div>
+            <div className="edit-modal-content">
+              <div className="mb-md">
+                <label className="block text-sm font-medium mb-sm">Subject</label>
+                <input
+                  type="text"
+                  value={editSubject}
+                  onChange={(e) => setEditSubject(e.target.value)}
+                  className="w-full"
+                  placeholder="Enter email subject..."
+                />
+              </div>
+              <div className="mb-md">
+                <label className="block text-sm font-medium mb-sm">Message</label>
+                <textarea
+                  value={editBody}
+                  onChange={(e) => setEditBody(e.target.value)}
+                  rows="8"
+                  className="w-full"
+                  placeholder="Write your email message here..."
+                />
+              </div>
+            </div>
+            <div className="edit-modal-actions">
+              <button onClick={cancelEdit} className="cancel-edit-btn">Cancel</button>
+              <button onClick={saveEdit} className="save-edit-btn">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dialog Component */}
+      {dialog && (
+        <div className="dialog-overlay" onClick={closeDialog}>
+          <div className="dialog-box" onClick={(e) => e.stopPropagation()}>
+            <div className="dialog-header">
+              <div className={`dialog-icon ${dialog.type}`}>
+                {dialog.type === "success" && "✅"}
+                {dialog.type === "error" && "❌"}
+                {dialog.type === "warning" && "⚠️"}
+                {dialog.type === "info" && "ℹ️"}
+              </div>
+              <h3 className="dialog-title">{dialog.title}</h3>
+              <button onClick={closeDialog} className="dialog-close-btn">×</button>
+            </div>
+            <div className="dialog-content">
+              <p>{dialog.message}</p>
+            </div>
+            <div className="dialog-actions">
+              <button onClick={closeDialog} className="dialog-ok-btn">OK</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

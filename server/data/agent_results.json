@@ -1,0 +1,24 @@
+[
+    {
+        "id": 1763976300836,
+        "type": "agent_result",
+        "title": "Analysis: Submit weekly report",
+        "content": "{\n  \"category\": [\"To-Do\"],\n  \"reason\": \"The email asks the user to take a specific action (send a report) by a deadline.\"\n}",
+        "query": "Ask general inbox tasks (\"Show me all urgent emails\") ",
+        "emailSubject": "Submit weekly report",
+        "emailSender": "boss@example.com",
+        "timestamp": "2025-11-24T09:25:00.836Z",
+        "originalEmailId": "1"
+    },
+    {
+        "id": 1763976382831,
+        "type": "agent_result",
+        "title": "Analysis: Submit weekly report",
+        "content": "{\n  \"category\": [\"To-Do\"],\n  \"reason\": \"The email asks the user to take a specific action (send a report) by a deadline.\"\n}",
+        "query": "Ask general inbox tasks (\"Show me all urgent emails\") ",
+        "emailSubject": "Submit weekly report",
+        "emailSender": "boss@example.com",
+        "timestamp": "2025-11-24T09:26:22.831Z",
+        "originalEmailId": "1"
+    }
+]
