@@ -48,13 +48,15 @@
     margin-bottom: var(--space-xl);
     min-height: calc(100vh - 200px);
     max-height: calc(100vh - 200px);
-    overflow: auto; /* allow page-level scrolling when needed */
+    overflow: auto;
+    /* allow page-level scrolling when needed */
 }
 
 .agent-sidebar {
     width: 360px;
     flex-shrink: 0;
-    min-height: 0; /* allow the inner list to control its own scrolling */
+    min-height: 0;
+    /* allow the inner list to control its own scrolling */
     display: flex;
     flex-direction: column;
 }
@@ -72,7 +74,8 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--bg-accent);
-    overflow: visible; /* allow scrollbars inside children to be visible */
+    overflow: visible;
+    /* allow scrollbars inside children to be visible */
     min-height: 600px;
     display: flex;
     flex-direction: column;
@@ -172,7 +175,8 @@
     padding: var(--space-md);
     scrollbar-width: thin;
     scrollbar-color: var(--bg-accent) transparent;
-    min-height: 0; /* enable proper flexbox scrolling */
+    min-height: 0;
+    /* enable proper flexbox scrolling */
 }
 
 .agent-emails-ul {
