@@ -4,6 +4,16 @@ A lightweight email assistant web app that demonstrates an AI-driven agent for r
 
 ---
 
+## Table of Contents
+
+- [How to run the backend and UI](#how-to-run-the-backend-and-ui)
+- [How to load the Mock Inbox (quick)](#how-to-load-the-mock-inbox-quick)
+- [Prompt Brain (Prompts page)](#prompt-brain-prompts-page)
+- [Usage examples](#usage-examples)
+- [Tech used](#tech-used)
+- [Environment & API keys (dotenv)](#environment--api-keys-dotenv)
+
+
 ## How to run the backend and UI
 Start backend (Express) — default port 5000:
 
@@ -51,6 +61,23 @@ Placeholders you can use: `{{email_body}}`, `{{email_subject}}` — the client f
 - Draft reply: `Draft a reply in a friendly tone` → Save to Drafts if desired
 
 ---
+
+## Tech used
+
+- **Frontend:** React, Vite, modern JavaScript (ESM), CSS
+- **Backend:** Node.js, Express
+- **LLM / AI:** Google Generative AI (Gemini) via `@google/generative-ai` client (configurable; can be swapped for OpenAI)
+- **HTTP:** native Fetch API (wrapped in `client/src/api.js`)
+- **Data:** JSON files under `server/data` used as a simple local datastore for `inbox`, `drafts`, `prompts`, and `conversations`
+- **Dev tooling:** npm, Vite dev server
+
+Files of interest:
+- Frontend entry: `client/src/main.jsx`
+- Main pages: `client/src/pages/AgentPage.jsx`, `client/src/pages/InboxPage.jsx`, `client/src/pages/PromptsPage.jsx`
+- Reusable components: `client/src/components/Dialog.jsx`
+- Backend server: `server/server.js`
+- LLM wrapper: `server/utils/llm.js`
+
 
 ## Environment & API keys (dotenv)
 This project uses simple `.env` configuration for local development. The server's LLM helper (`server/utils/llm.js`) reads `process.env.GEMINI_API_KEY` via `dotenv`. The client reads `import.meta.env.VITE_API_BASE` for the API base URL.
