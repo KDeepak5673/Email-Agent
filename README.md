@@ -61,6 +61,37 @@ The deployed frontend already uses the hosted backend when `VITE_API_BASE` is se
 
 ---
 
+## Project Structure
+
+```text
+e:\Projects\Prompt-Driven Email Agent
+├─ client/                 # Frontend (Vite + React SPA)
+│  ├─ public/              # Static assets
+│  ├─ src/
+│  │  ├─ components/       # Reusable UI components
+│  │  ├─ pages/            # Agent, Inbox, Prompts views
+│  │  ├─ api/              # Small API wrapper around fetch
+│  │  ├─ hooks/            # Custom React hooks (if any)
+│  │  ├─ styles/           # Global / shared styles
+│  │  └─ main.jsx          # App entry
+│  ├─ index.html
+│  ├─ vite.config.*        # Vite config
+│  └─ package.json
+│
+├─ server/                 # Backend (Node + Express)
+│  ├─ data/                # JSON data: inbox, drafts, prompts, conversations
+│  ├─ routes/              # Express route definitions
+│  ├─ services/            # LLM / business logic helpers
+│  ├─ utils/               # Utility modules (e.g. Gemini client config)
+│  ├─ server.js            # Express app entry
+│  └─ package.json
+│
+├─ README.md
+└─ .gitignore
+```
+
+---
+
 ## Getting Started (Local)
 
 ```bash
