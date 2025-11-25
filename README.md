@@ -1,105 +1,115 @@
 # Prompt-Driven Email Agent
 
-A lightweight email assistant web app that demonstrates an AI-driven agent for reading, summarizing, and drafting replies to emails. .
+A prompt-driven email assistant that uses a Large Language Model (LLM) to understand natural-language instructions and generate, refine, and manage email content conversationally.
 
 ---
 
-## Table of Contents
+## Live Deployments
 
-- [How to run the backend and UI](#how-to-run-the-backend-and-ui)
-- [How to load the Mock Inbox (quick)](#how-to-load-the-mock-inbox-quick)
-- [Prompt Brain (Prompts page)](#prompt-brain-prompts-page)
-- [Usage examples](#usage-examples)
-- [Tech used](#tech-used)
-- [Environment & API keys (dotenv)](#environment--api-keys-dotenv)
+- **Frontend (Vercel):** https://email-agent-beige.vercel.app/  
+- **Backend (Render):** configure `VITE_API_BASE` to point to your Render backend URL, e.g.  
+  `VITE_API_BASE=https://your-backend.onrender.com`
 
+The deployed frontend already uses the hosted backend when `VITE_API_BASE` is set accordingly.
 
-## How to run the backend and UI
-Start backend (Express) — default port 5000:
+---
 
-```powershell
-cd "e:\Projects\Prompt-Driven Email Agent\server"
-node server.js
-```
+## Features
 
-Start frontend (Vite dev server) — default port 5173:
+- View a mock inbox and inspect full email content.
+- Summarize long emails to concise bullet points.
+- Categorize emails (e.g., sales, support, internal, notification).
+- Extract action items and deadlines from email bodies.
+- Draft context-aware replies in different tones.
+- Ask follow-up questions in a conversation for the same email.
+- Edit “Prompt Brain” templates that control how the LLM behaves.
 
-```powershell
-cd "e:\Projects\Prompt-Driven Email Agent\client"
+---
+
+## Tech Stack
+
+### Frontend (client)
+
+- **Hosting:** Vercel
+- **Framework:** React (SPA)
+- **Bundler / Dev server:** Vite
+- **Language:** JavaScript (ES modules)
+- **HTTP client:** `fetch` via a small API wrapper
+- **Routing / Pages:** Agent, Inbox, Prompts views
+
+### Backend (server)
+
+- **Hosting:** Render
+- **Runtime:** Node.js
+- **Framework:** Express
+- **Data storage:** Local JSON files (inbox, drafts, prompts, conversations)
+- **API responsibilities:**
+  - Inbox / email retrieval
+  - Drafts and conversations
+  - Prompt templates CRUD
+  - LLM interaction endpoint
+
+### LLM / AI (Conversation Engine)
+
+- **Provider:** Google Generative AI (Gemini)
+- **Node client:** `@google/generative-ai`
+- **Model (LLM) used in code for conversation:** configured in a server utility (e.g. `gemini-1.5-pro` or similar).
+- Used for:
+  - Summarization, categorization, and action item extraction
+  - Drafting replies and rewriting in different tones
+  - Maintaining conversational context within a thread
+
+---
+
+## Getting Started (Local)
+
+```bash
+# backend
+cd server
+npm install
+npm run dev   # or: node server.js
+
+# frontend
+cd client
+npm install
 npm run dev
 ```
 
-Open the UI in your browser:
-- Agent: http://localhost:5173/agent
-- Inbox: http://localhost:5173/inbox
-- Prompts: http://localhost:5173/prompts
+Then open:
 
-
----
-
-## How to load the Mock Inbox (quick)
-- Edit `server/data/inbox.json` and add or modify email objects (fields: `id`, `sender`, `subject`, `body`, `timestamp` as ISO string).
-- Restart `server.js` (or allow your dev server to pick up changes) and click `🔄 Reload` on the Inbox page (`/inbox`) or the Agent page sidebar to fetch fresh inbox data.
+- https://email-agent-beige.vercel.app/agent  
+- https://email-agent-beige.vercel.app/inbox  
+- https://email-agent-beige.vercel.app/prompts  
 
 ---
 
-## Prompt Brain (Prompts page)
-The Prompts page (`/prompts`) shows editable templates the AI uses for:
-- Email Categorization
-- Action Item Extraction
-- Auto-Reply Drafting
+## Environment & Configuration
 
-Edit the textarea for a prompt and click `💾 Save Prompts` to persist changes. Use `🔄 Reload` to pull saved templates from the backend.
-
-Placeholders you can use: `{{email_body}}`, `{{email_subject}}` — the client fills these when invoking the agent.
-
----
-
-## Usage examples
-- Summarize an email: `/agent` → select email → type `Summarize this email` → Send
-- Extract action items: `What action items are in this email?`
-- Draft reply: `Draft a reply in a friendly tone` → Save to Drafts if desired
-
----
-
-## Tech used
-
-- **Frontend:** React, Vite, modern JavaScript (ESM), CSS
-- **Backend:** Node.js, Express
-- **LLM / AI:** Google Generative AI (Gemini) via `@google/generative-ai` client (configurable; can be swapped for OpenAI)
-- **HTTP:** native Fetch API (wrapped in `client/src/api.js`)
-- **Data:** JSON files under `server/data` used as a simple local datastore for `inbox`, `drafts`, `prompts`, and `conversations`
-- **Dev tooling:** npm, Vite dev server
-
-Files of interest:
-- Frontend entry: `client/src/main.jsx`
-- Main pages: `client/src/pages/AgentPage.jsx`, `client/src/pages/InboxPage.jsx`, `client/src/pages/PromptsPage.jsx`
-- Reusable components: `client/src/components/Dialog.jsx`
-- Backend server: `server/server.js`
-- LLM wrapper: `server/utils/llm.js`
-
-
-## Environment & API keys (dotenv)
-This project uses simple `.env` configuration for local development. The server's LLM helper (`server/utils/llm.js`) reads `process.env.GEMINI_API_KEY` via `dotenv`. The client reads `import.meta.env.VITE_API_BASE` for the API base URL.
-
-
-Server (`server/.env`)
-- Create `server/.env` with:
+### Server (`server/.env`)
 
 ```text
-# Google Generative AI (Gemini) key used by `server/utils/llm.js`
-GEMINI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-
-How to get a Gemini (Google) API key:
-1. Create a Google Cloud project and enable the Generative AI API (or the provider you prefer).
-2. Create an API key or service account credentials and copy the key string.
-3. Place the key in `server/.env` as `GEMINI_API_KEY`.
+GEMINI_API_KEY=your-google-gemini-api-key
 ```
 
-Client (`client/.env`)
-- The client only needs the API base URL. Create `client/.env` with:
+### Client (`client/.env`)
+
+For local dev:
 
 ```text
 VITE_API_BASE=http://localhost:5000
 ```
+
+For production / Render backend:
+
+```text
+VITE_API_BASE=https://your-backend.onrender.com
+```
+
+---
+
+## Usage
+
+- Select an email in the Agent or Inbox view.
+- Ask the agent to summarize, categorize, extract actions, or draft a reply.
+- Adjust prompt templates on the Prompts page to tune behavior.
+- Conversations for each email are stored so you can ask follow-up questions.
