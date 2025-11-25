@@ -1,13 +1,15 @@
 const express = require("express");
-const fs = require("fs");
 const router = express.Router();
 const { runLLM } = require("../utils/llm");
+const { getCollection } = require("../utils/db");
 
 router.post("/", async (req, res) => {
   try {
     const { email, userQuery } = req.body;
 
-    const prompts = JSON.parse(fs.readFileSync("./data/prompts.json"));
+    const coll = getCollection('prompts');
+    const promptsDoc = await coll.findOne({ name: 'prompts' });
+    const prompts = promptsDoc ? promptsDoc.value : {};
 
     const systemPrompt = `
 You are an intelligent Email Productivity Agent.

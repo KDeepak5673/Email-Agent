@@ -4,6 +4,7 @@
   "description": "Development of a Prompt-Driven Email Productivity Agent",
   "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Deepak Kumar",
@@ -15,6 +16,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "fs": "^0.0.1-security",
+    "mongodb": "^5.9.0",
     "openai": "^6.9.1"
   }
 }

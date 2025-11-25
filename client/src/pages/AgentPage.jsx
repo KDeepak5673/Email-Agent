@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { api } from "../api";
 import "./AgentPage.css";
 
@@ -15,6 +15,7 @@ export default function AgentPage() {
   const [dialog, setDialog] = useState(null);
   const [emailConversations, setEmailConversations] = useState({}); // Track conversations per email
   const [currentConversationId, setCurrentConversationId] = useState(null);
+  const messagesRef = useRef(null);
 
   const filteredConversations = conversations.filter(conv =>
     conv.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -52,7 +53,14 @@ export default function AgentPage() {
 
   // Normalize message timestamps: ensure each message.timestamp is a Date
   function normalizeMessageTimestamps(messages = []) {
-    return messages.map(m => ({ ...m, timestamp: m.timestamp ? new Date(m.timestamp) : new Date() }));
+    // Convert timestamp fields to Date and sort ascending (oldest first)
+    const normalized = messages.map(m => ({ ...m, timestamp: m.timestamp ? new Date(m.timestamp) : new Date() }));
+    normalized.sort((a, b) => {
+      const ta = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime();
+      const tb = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime();
+      return ta - tb;
+    });
+    return normalized;
   }
 
   // Format timestamps safely (accepts Date or string)
@@ -65,14 +73,27 @@ export default function AgentPage() {
     try {
       const data = await api.loadConversations();
       // Normalize timestamps inside each conversation's messages
-      setConversations((data || []).map(conv => ({
+      const normalized = (data || []).map(conv => ({
         ...conv,
         messages: normalizeMessageTimestamps(conv.messages || [])
-      })));
+      }));
+      // Sort conversations by timestamp (newest first)
+      normalized.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
+      setConversations(normalized);
     } catch (e) {
       showDialog("error", "Load Failed", "Failed to load conversations: " + e.message);
     }
   }
+
+  // Scroll messages container to bottom whenever conversation updates
+  useEffect(() => {
+    if (messagesRef.current) {
+      // slight delay to let DOM render
+      setTimeout(() => {
+        messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+      }, 50);
+    }
+  }, [conversation, activeView]);
 
   async function selectEmail(selectedEmail) {
     setEmail(selectedEmail);
@@ -129,7 +150,7 @@ export default function AgentPage() {
   async function saveConversation(messages, emailContext) {
     try {
       const conversationData = {
-        id: currentConversationId || Date.now(),
+        id: currentConversationId || undefined,
         type: "conversation",
         title: `Chat: ${emailContext.subject}`,
         messages: messages,
@@ -138,19 +159,21 @@ export default function AgentPage() {
         timestamp: new Date().toISOString(),
         emailId: emailContext.id
       };
+      // Send conversation to server; server will insert or update and return the saved document
+      const resp = await api.saveConversation(conversationData);
+      const savedConv = (resp && resp.conversation) ? resp.conversation : null;
+      const returnedId = (savedConv && savedConv.id) ? savedConv.id : (conversationData.id || currentConversationId);
+      setCurrentConversationId(returnedId);
 
-      // If updating existing conversation, delete it first
-      if (currentConversationId) {
-        await api.deleteConversation(currentConversationId);
-      }
+      // Use server-returned conversation (if provided) to update local state, normalize timestamps and sort messages
+      const convToShow = savedConv ? {
+        ...savedConv,
+        messages: normalizeMessageTimestamps(savedConv.messages || [])
+      } : { ...conversationData, id: returnedId, messages: normalizeMessageTimestamps(conversationData.messages || []) };
 
-      await api.saveConversation(conversationData);
-      setCurrentConversationId(conversationData.id);
-
-      // Update conversations list
       setConversations(prev => {
-        const filtered = prev.filter(conv => conv.id !== conversationData.id);
-        return [{ ...conversationData, messages: normalizeMessageTimestamps(conversationData.messages || []) }, ...filtered];
+        const filtered = prev.filter(conv => conv.id !== returnedId);
+        return [convToShow, ...filtered];
       });
     } catch (err) {
       console.error("Failed to save conversation:", err);
@@ -306,12 +329,12 @@ export default function AgentPage() {
               >
                 📧 Inbox Agent
               </button>
-              {/* <button
+              <button
                 className={`agent-tab ${activeView === "conversations" ? "active" : ""}`}
                 onClick={() => setActiveView("conversations")}
               >
                 💬 Conversations ({conversations.length})
-              </button> */}
+              </button>
             </div>
           </div>
 
@@ -340,7 +363,7 @@ export default function AgentPage() {
                 </div>
 
                 {/* Chat Messages */}
-                <div className="agent-messages-container">
+                <div ref={messagesRef} className="agent-messages-container">
                   {conversation.length === 0 ? (
                     <div className="agent-empty-chat">
                       <h3 className="agent-empty-title">Start a Conversation</h3>
@@ -426,7 +449,7 @@ export default function AgentPage() {
               </div>
 
               {/* Chat Messages */}
-              <div className="agent-messages-container">
+              <div ref={messagesRef} className="agent-messages-container">
                 {conversation.length === 0 ? (
                   <div className="agent-empty-chat">
                     <h3 className="agent-empty-title">Ask About Your Inbox</h3>

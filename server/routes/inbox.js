@@ -1,10 +1,15 @@
 const express = require("express");
-const fs = require("fs");
 const router = express.Router();
+const { getCollection } = require("../utils/db");
 
-router.get("/", (req, res) => {
-  const inbox = JSON.parse(fs.readFileSync("./data/inbox.json"));
-  res.json(inbox);
+router.get("/", async (req, res) => {
+  try {
+    const coll = getCollection('inbox');
+    const inbox = await coll.find({}).toArray();
+    res.json(inbox);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
