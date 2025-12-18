@@ -42,7 +42,7 @@ The deployed frontend already uses the hosted backend when `VITE_API_BASE` is se
 - **Hosting:** Render
 - **Runtime:** Node.js
 - **Framework:** Express
-- **Data storage:** Local JSON files (inbox, drafts, prompts, conversations)
+- **Data storage:** MongoDB (inbox, drafts, prompts, conversations)
 - **API responsibilities:**
   - Inbox / email retrieval
   - Drafts and conversations
